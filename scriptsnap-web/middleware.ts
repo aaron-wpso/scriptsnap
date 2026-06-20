@@ -7,8 +7,11 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-  // Fail open if env vars are missing (prevents 500 crash on misconfiguration)
+  // Fail closed — missing config means no auth, so block all protected routes
   if (!supabaseUrl || !supabaseKey) {
+    if (!pathname.startsWith("/auth")) {
+      return NextResponse.redirect(new URL("/auth", request.url));
+    }
     return supabaseResponse;
   }
 
