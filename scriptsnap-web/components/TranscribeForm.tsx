@@ -123,7 +123,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
   if (phase.kind === "idle" || phase.kind === "failed") {
     return (
       <div className="space-y-3">
-        <form onSubmit={handleSubmit} className="flex gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
           <input
             type="url"
             placeholder="https://www.tiktok.com/@user/video/..."
@@ -135,7 +135,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
           <button
             type="submit"
             disabled={submitting}
-            className="bg-indigo-600 text-white rounded-lg px-5 py-2 font-medium hover:bg-indigo-500 disabled:opacity-50 whitespace-nowrap transition-colors"
+            className="w-full sm:w-auto bg-indigo-600 text-white rounded-lg px-5 py-2 font-medium hover:bg-indigo-500 disabled:opacity-50 whitespace-nowrap transition-colors"
           >
             {submitting ? "Submitting…" : "Transcribe"}
           </button>
@@ -151,26 +151,26 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
   if (phase.kind === "pending" || phase.kind === "processing") {
     const active = stepIndex(phase);
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-5">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 space-y-5 overflow-hidden">
         <p className="text-xs text-gray-500 truncate">{phase.url}</p>
 
-        {/* Step tracker */}
+        {/* Step tracker — labels hidden on mobile to prevent overflow */}
         <div className="flex items-center">
           {STEPS.map((label, i) => {
-            const done   = i < active;
+            const done    = i < active;
             const current = i === active;
             const waiting = i > active;
             return (
-              <div key={label} className="flex items-center flex-1 last:flex-none">
-                <div className="flex flex-col items-center gap-1.5">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
+              <div key={label} className="flex items-center flex-1 last:flex-none min-w-0">
+                <div className="flex flex-col items-center gap-1.5 min-w-0">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-all
                     ${done    ? "bg-green-500 text-white" : ""}
                     ${current ? "bg-indigo-500 text-white ring-4 ring-indigo-500/30 animate-pulse" : ""}
                     ${waiting ? "bg-gray-800 border border-gray-700 text-gray-600" : ""}
                   `}>
                     {done ? "✓" : i + 1}
                   </div>
-                  <span className={`text-xs whitespace-nowrap
+                  <span className={`hidden sm:block text-xs whitespace-nowrap
                     ${done    ? "text-green-400" : ""}
                     ${current ? "text-indigo-400" : ""}
                     ${waiting ? "text-gray-600"   : ""}
@@ -179,7 +179,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
                   </span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-px mx-2 mb-4 transition-colors
+                  <div className={`flex-1 h-px mx-2 mb-4 sm:mb-6 transition-colors
                     ${i < active ? "bg-green-500" : "bg-gray-700"}
                   `} />
                 )}
@@ -194,15 +194,15 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
   // ── COMPLETED ──────────────────────────────────────────────────
   if (phase.kind === "completed") {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 space-y-4">
-        <div className="flex justify-between items-start gap-4">
-          <div>
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 space-y-4 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-green-400">✓ Transcription complete</p>
             <p className="text-xs text-gray-500 truncate mt-0.5">{phase.url}</p>
           </div>
           <button
             onClick={() => setPhase({ kind: "idle" })}
-            className="text-sm text-gray-400 hover:text-indigo-400 transition-colors shrink-0"
+            className="text-sm text-gray-400 hover:text-indigo-400 transition-colors shrink-0 self-start"
           >
             + Transcribe another
           </button>

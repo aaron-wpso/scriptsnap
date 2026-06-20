@@ -11,13 +11,13 @@ export default async function DashboardPage() {
   if (!user) redirect("/auth");
 
   return (
-    <div className="min-h-screen bg-gray-950">
-      <header className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-gray-950 overflow-x-hidden">
+      <header className="bg-gray-900 border-b border-gray-800 px-4 sm:px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-white">
           Script<span className="text-indigo-400">Snap</span>
         </h1>
         <div className="flex items-center gap-4">
-          <Link href="/settings" className="text-sm text-gray-400 hover:text-indigo-400 transition-colors">
+          <Link href="/settings" className="hidden sm:block text-sm text-gray-400 hover:text-indigo-400 transition-colors">
             Settings
           </Link>
           <form action="/auth/signout" method="post">
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-10 space-y-10">
+      <main className="max-w-3xl mx-auto px-4 py-8 sm:py-10 space-y-8 sm:space-y-10">
         <section>
           <h2 className="text-lg font-semibold text-white mb-4">Transcribe a TikTok video</h2>
           <TranscribeForm accessToken={(await supabase.auth.getSession()).data.session?.access_token ?? ""} />

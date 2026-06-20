@@ -37,14 +37,20 @@ public static class TranscribeEndpoints
             return Results.Accepted($"/api/transcriptions/{record.Id}", record);
         });
 
-        group.MapGet("/", async (AppDbContext db, ClaimsPrincipal user) =>
+        group.MapGet("/", async (AppDbContext db, ClaimsPrincipal user, int page = 1, int pageSize = 10) =>
         {
+            page     = Math.Max(1, page);
+            pageSize = Math.Clamp(pageSize, 1, 50);
+
             var userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var history = await db.Transcriptions
-                .Where(t => t.UserId == userId)
+            var query  = db.Transcriptions.Where(t => t.UserId == userId);
+            var total  = await query.CountAsync();
+            var items  = await query
                 .OrderByDescending(t => t.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
-            return Results.Ok(history);
+            return Results.Ok(new { items, total, page, pageSize });
         });
 
         group.MapGet("/{id:guid}", async (Guid id, AppDbContext db, ClaimsPrincipal user) =>
