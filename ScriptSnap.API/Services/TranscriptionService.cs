@@ -27,11 +27,12 @@ public class TranscriptionService(
             record.Status = TranscriptionStatus.Processing;
             await db.SaveChangesAsync(ct);
 
-            var audioUrl = await GetTikTokAudioUrlAsync(url, ct);
-            record.AudioUrl = audioUrl;
+            var media = await GetTikTokMediaAsync(url, ct);
+            record.AudioUrl = media.AudioUrl;
+            record.ThumbnailUrl = media.ThumbnailUrl;
             await db.SaveChangesAsync(ct);
 
-            record.Transcript = await TranscribeWithGeminiAsync(audioUrl, ct);
+            record.Transcript = await TranscribeWithGeminiAsync(media.AudioUrl, ct);
             record.Status = TranscriptionStatus.Completed;
             record.CompletedAt = DateTime.UtcNow;
         }
@@ -45,7 +46,9 @@ public class TranscriptionService(
         await db.SaveChangesAsync(ct);
     }
 
-    private async Task<string> GetTikTokAudioUrlAsync(string tiktokUrl, CancellationToken ct)
+    private record TikTokMedia(string AudioUrl, string? ThumbnailUrl);
+
+    private async Task<TikTokMedia> GetTikTokMediaAsync(string tiktokUrl, CancellationToken ct)
     {
         var client = httpClientFactory.CreateClient("tikwm");
 
@@ -65,13 +68,20 @@ public class TranscriptionService(
         var data = root.GetProperty("data");
 
         // play = full video audio (contains speech); music = background music only
+        string? audioUrl = null;
         if (data.TryGetProperty("play", out var play) && play.GetString() is { Length: > 0 } playUrl)
-            return playUrl;
+            audioUrl = playUrl;
+        else if (data.TryGetProperty("music", out var music) && music.GetString() is { Length: > 0 } musicUrl)
+            audioUrl = musicUrl;
 
-        if (data.TryGetProperty("music", out var music) && music.GetString() is { Length: > 0 } musicUrl)
-            return musicUrl;
+        if (audioUrl is null)
+            throw new InvalidOperationException("TikWM returned no usable media URL.");
 
-        throw new InvalidOperationException("TikWM returned no usable media URL.");
+        string? thumbnailUrl = null;
+        if (data.TryGetProperty("cover", out var cover) && cover.GetString() is { Length: > 0 } coverUrl)
+            thumbnailUrl = coverUrl;
+
+        return new TikTokMedia(audioUrl, thumbnailUrl);
     }
 
     private async Task<string> TranscribeWithGeminiAsync(string audioUrl, CancellationToken ct)

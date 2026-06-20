@@ -8,6 +8,7 @@ type Transcription = {
   TikTokUrl: string;
   Status: "Pending" | "Processing" | "Completed" | "Failed";
   AudioUrl: string | null;
+  ThumbnailUrl: string | null;
   Transcript: string | null;
   ErrorMessage: string | null;
   CreatedAt: string;
@@ -94,7 +95,18 @@ export default function TranscriptionHistory({ userId }: { userId: string }) {
           <li key={item.Id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
             {/* Row — two-line layout on mobile */}
             <div className="flex items-center gap-3 px-4 py-3">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${dot[item.Status]}`} />
+              {item.ThumbnailUrl ? (
+                <div className="relative shrink-0">
+                  <img
+                    src={item.ThumbnailUrl}
+                    alt="Thumbnail"
+                    className="w-10 h-10 rounded-md object-cover"
+                  />
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-gray-900 ${dot[item.Status]}`} />
+                </div>
+              ) : (
+                <span className={`w-2 h-2 rounded-full shrink-0 ${dot[item.Status]}`} />
+              )}
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-300 truncate">{item.TikTokUrl}</p>

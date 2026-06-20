@@ -9,7 +9,7 @@ type Phase =
   | { kind: "idle" }
   | { kind: "pending";    id: string; url: string }
   | { kind: "processing"; id: string; url: string }
-  | { kind: "completed";  url: string; audioUrl: string | null; transcript: string }
+  | { kind: "completed";  url: string; audioUrl: string | null; thumbnailUrl: string | null; transcript: string }
   | { kind: "failed";     url: string; error: string };
 
 const STEPS = ["Submitted", "Fetching audio", "Transcribing", "Done"];
@@ -50,6 +50,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
           kind: "completed",
           url,
           audioUrl: row.AudioUrl ? String(row.AudioUrl) : null,
+          thumbnailUrl: row.ThumbnailUrl ? String(row.ThumbnailUrl) : null,
           transcript: String(row.Transcript ?? ""),
         });
       } else if (row.Status === "Failed") {
@@ -74,7 +75,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
     const poll = setInterval(async () => {
       const { data } = await supabase
         .from("Transcriptions")
-        .select("Status, Transcript, ErrorMessage, AudioUrl")
+        .select("Status, Transcript, ErrorMessage, AudioUrl, ThumbnailUrl")
         .eq("Id", id)
         .single();
       if (data) applyRow(data as Record<string, unknown>);
@@ -231,17 +232,26 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
   if (phase.kind === "completed") {
     return (
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 space-y-4 overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-green-400">✓ Transcription complete</p>
-            <p className="text-xs text-gray-500 truncate mt-0.5">{phase.url}</p>
+        <div className="flex gap-3">
+          {phase.thumbnailUrl && (
+            <img
+              src={phase.thumbnailUrl}
+              alt="Video thumbnail"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0"
+            />
+          )}
+          <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-green-400">✓ Transcription complete</p>
+              <p className="text-xs text-gray-500 truncate mt-0.5">{phase.url}</p>
+            </div>
+            <button
+              onClick={() => setPhase({ kind: "idle" })}
+              className="text-sm text-gray-400 hover:text-indigo-400 transition-colors shrink-0 self-start"
+            >
+              + Transcribe another
+            </button>
           </div>
-          <button
-            onClick={() => setPhase({ kind: "idle" })}
-            className="text-sm text-gray-400 hover:text-indigo-400 transition-colors shrink-0 self-start"
-          >
-            + Transcribe another
-          </button>
         </div>
 
         {phase.audioUrl && (

@@ -6,6 +6,7 @@ public class Transcription
     public Guid UserId { get; set; }
     public string TikTokUrl { get; set; } = string.Empty;
     public string? AudioUrl { get; set; }
+    public string? ThumbnailUrl { get; set; }
     public string? Transcript { get; set; }
     public TranscriptionStatus Status { get; set; } = TranscriptionStatus.Pending;
     public string? ErrorMessage { get; set; }
