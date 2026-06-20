@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import ThumbnailImage from "@/components/ThumbnailImage";
 import { createClient } from "@/lib/supabase/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
@@ -234,10 +235,9 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 space-y-4 overflow-hidden">
         <div className="flex gap-3">
           {phase.thumbnailUrl && (
-            <img
+            <ThumbnailImage
               src={phase.thumbnailUrl}
-              alt="Video thumbnail"
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover shrink-0"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg shrink-0"
             />
           )}
           <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import ThumbnailImage from "@/components/ThumbnailImage";
 import { createClient } from "@/lib/supabase/client";
 
 type Transcription = {
@@ -97,10 +98,9 @@ export default function TranscriptionHistory({ userId }: { userId: string }) {
             <div className="flex items-center gap-3 px-4 py-3">
               {item.ThumbnailUrl ? (
                 <div className="relative shrink-0">
-                  <img
+                  <ThumbnailImage
                     src={item.ThumbnailUrl}
-                    alt="Thumbnail"
-                    className="w-10 h-10 rounded-md object-cover"
+                    className="w-10 h-10 rounded-md"
                   />
                   <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-gray-900 ${dot[item.Status]}`} />
                 </div>
