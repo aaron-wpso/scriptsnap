@@ -28,7 +28,7 @@ export default function ThumbnailImage({ src, className = "" }: Props) {
             src={src}
             alt="Video thumbnail"
             className="max-w-full max-h-full rounded-xl shadow-2xl object-contain cursor-zoom-out"
-            onClick={(e) => e.stopPropagation()}
+            onClick={() => setOpen(false)}
           />
           <button
             onClick={() => setOpen(false)}
