@@ -35,7 +35,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth", request.url));
   }
 
-  if (user && pathname.startsWith("/auth")) {
+  // Allow POST to /auth/* through (e.g. /auth/signout) even when authenticated
+  if (user && pathname.startsWith("/auth") && request.method === "GET") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
