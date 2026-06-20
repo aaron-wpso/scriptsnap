@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
   let supabaseResponse = NextResponse.next({ request });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,10 +29,7 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // getUser() validates the token server-side — do not replace with getSession()
   const { data: { user } } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
 
   if (!user && !pathname.startsWith("/auth")) {
     return NextResponse.redirect(new URL("/auth", request.url));
