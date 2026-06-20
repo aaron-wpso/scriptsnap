@@ -1,0 +1,40 @@
+# ── .NET / ASP.NET Core ────────────────────────────────────────────────────────
+bin/
+obj/
+*.user
+.vs/
+*.suo
+*.userprefs
+appsettings.Development.json
+appsettings.*.json
+!appsettings.json
+
+# dotnet user-secrets are stored in %APPDATA%\Microsoft\UserSecrets — never here
+# But exclude any accidental secrets.json drops
+secrets.json
+
+# ── Next.js ────────────────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+build/
+.pnp
+.pnp.*
+
+# ── Environment files ──────────────────────────────────────────────────────────
+# Keep .example files (they're templates with no real values)
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ── OS / Editor ────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
