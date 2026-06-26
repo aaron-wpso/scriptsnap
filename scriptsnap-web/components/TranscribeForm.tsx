@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import ThumbnailImage from "@/components/ThumbnailImage";
 import ModelSelector, { type ModelId } from "@/components/ModelSelector";
+import TranscriptionSteps from "@/components/TranscriptionSteps";
 import { createClient } from "@/lib/supabase/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
@@ -14,14 +15,6 @@ type Phase =
   | { kind: "completed";  url: string; audioUrl: string | null; thumbnailUrl: string | null; transcript: string }
   | { kind: "failed";     url: string; error: string };
 
-const STEPS = ["Submitted", "Fetching audio", "Transcribing", "Done"];
-
-function stepIndex(phase: Phase): number {
-  if (phase.kind === "pending")    return 1;
-  if (phase.kind === "processing") return 2;
-  if (phase.kind === "completed")  return 3;
-  return 0;
-}
 
 export default function TranscribeForm({ accessToken }: { accessToken: string }) {
   const [urlInput, setUrlInput] = useState("");
@@ -156,80 +149,10 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
 
   // ── PROCESSING ─────────────────────────────────────────────────
   if (phase.kind === "pending" || phase.kind === "processing") {
-    const active = stepIndex(phase);
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 space-y-5 overflow-hidden">
+      <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 space-y-5">
         <p className="text-xs text-gray-500 truncate">{phase.url}</p>
-
-        {/* Step tracker — vertical on mobile, horizontal on sm+ */}
-
-        {/* Mobile: vertical */}
-        <div className="flex flex-col gap-0 sm:hidden">
-          {STEPS.map((label, i) => {
-            const done    = i < active;
-            const current = i === active;
-            const waiting = i > active;
-            return (
-              <div key={label} className="flex items-stretch gap-3">
-                {/* Circle + connector */}
-                <div className="flex flex-col items-center">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 transition-all
-                    ${done    ? "bg-green-500 text-white" : ""}
-                    ${current ? "bg-indigo-500 text-white ring-4 ring-indigo-500/30 animate-pulse" : ""}
-                    ${waiting ? "bg-gray-800 border border-gray-700 text-gray-600" : ""}
-                  `}>
-                    {done ? "✓" : i + 1}
-                  </div>
-                  {i < STEPS.length - 1 && (
-                    <div className={`w-px flex-1 my-1 ${i < active ? "bg-green-500" : "bg-gray-700"}`} />
-                  )}
-                </div>
-                {/* Label */}
-                <div className={`pb-3 flex items-start pt-1 text-sm
-                  ${done    ? "text-green-400" : ""}
-                  ${current ? "text-indigo-400 font-medium" : ""}
-                  ${waiting ? "text-gray-600" : ""}
-                `}>
-                  {label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Desktop: horizontal */}
-        <div className="hidden sm:flex items-center">
-          {STEPS.map((label, i) => {
-            const done    = i < active;
-            const current = i === active;
-            const waiting = i > active;
-            return (
-              <div key={label} className="flex items-center flex-1 last:flex-none min-w-0">
-                <div className="flex flex-col items-center gap-1.5 min-w-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 transition-all
-                    ${done    ? "bg-green-500 text-white" : ""}
-                    ${current ? "bg-indigo-500 text-white ring-4 ring-indigo-500/30 animate-pulse" : ""}
-                    ${waiting ? "bg-gray-800 border border-gray-700 text-gray-600" : ""}
-                  `}>
-                    {done ? "✓" : i + 1}
-                  </div>
-                  <span className={`text-xs whitespace-nowrap
-                    ${done    ? "text-green-400" : ""}
-                    ${current ? "text-indigo-400" : ""}
-                    ${waiting ? "text-gray-600"   : ""}
-                  `}>
-                    {label}
-                  </span>
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div className={`flex-1 h-px mx-2 mb-6 transition-colors
-                    ${i < active ? "bg-green-500" : "bg-gray-700"}
-                  `} />
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <TranscriptionSteps status={phase.kind === "pending" ? "Pending" : "Processing"} />
       </div>
     );
   }

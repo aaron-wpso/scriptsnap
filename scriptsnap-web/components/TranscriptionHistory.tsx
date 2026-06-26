@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import ThumbnailImage from "@/components/ThumbnailImage";
 import ModelSelector, { type ModelId } from "@/components/ModelSelector";
+import TranscriptionSteps from "@/components/TranscriptionSteps";
 import { createClient } from "@/lib/supabase/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
@@ -156,6 +157,12 @@ export default function TranscriptionHistory({ userId, accessToken }: { userId: 
                 </button>
               )}
             </div>
+
+            {(item.Status === "Pending" || item.Status === "Processing") && (
+              <div className="border-t border-gray-800 px-4 py-4">
+                <TranscriptionSteps status={item.Status} />
+              </div>
+            )}
 
             {expanded === item.Id && (
               <div className="border-t border-gray-800 px-4 py-3 space-y-3">
