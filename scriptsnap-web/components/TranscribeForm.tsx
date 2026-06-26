@@ -128,7 +128,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
     return (
       <div className="space-y-3">
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-stretch gap-3">
             <input
               type="url"
               placeholder="https://www.tiktok.com/@user/video/..."

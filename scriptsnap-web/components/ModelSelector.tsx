@@ -50,7 +50,7 @@ export default function ModelSelector({
 
   const btnCls = size === "sm"
     ? "flex items-center gap-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
-    : "flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap";
+    : "flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-white rounded-lg px-3 text-sm font-medium transition-colors whitespace-nowrap w-full h-full";
 
   return (
     <div ref={ref} className="relative">
