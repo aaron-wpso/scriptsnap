@@ -10,6 +10,7 @@ public class Transcription
     public string? Transcript { get; set; }
     public TranscriptionStatus Status { get; set; } = TranscriptionStatus.Pending;
     public string? ErrorMessage { get; set; }
+    public string? ModelUsed { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? CompletedAt { get; set; }
 }

@@ -64,7 +64,7 @@ public class TelegramBotService(
         {
             try
             {
-                await transcriptionSvc.ProcessAsync(record.Id, text);
+                await transcriptionSvc.ProcessAsync(record.Id, text, TranscriptionService.DefaultModel);
 
                 using var innerScope = scopeFactory.CreateScope();
                 var innerDb = innerScope.ServiceProvider.GetRequiredService<AppDbContext>();

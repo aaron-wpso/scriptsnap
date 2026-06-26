@@ -6,6 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
+const GEMINI_MODELS = [
+  { id: "gemini-2.5-flash",      label: "Gemini 2.5 Flash — $1.00/M tokens (Recommended)" },
+  { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite — $0.30/M tokens (Cheapest)" },
+  { id: "gemini-2.5-pro",        label: "Gemini 2.5 Pro — $1.25/M tokens (Most Accurate)" },
+] as const;
+
+type ModelId = typeof GEMINI_MODELS[number]["id"];
+
 type Phase =
   | { kind: "idle" }
   | { kind: "pending";    id: string; url: string }
@@ -24,6 +32,7 @@ function stepIndex(phase: Phase): number {
 
 export default function TranscribeForm({ accessToken }: { accessToken: string }) {
   const [urlInput, setUrlInput] = useState("");
+  const [model, setModel] = useState<ModelId>("gemini-2.5-flash");
   const [submitting, setSubmitting] = useState(false);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
@@ -99,7 +108,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ url: urlInput }),
+      body: JSON.stringify({ url: urlInput, model }),
     });
 
     if (!res.ok) {
@@ -125,22 +134,33 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
   if (phase.kind === "idle" || phase.kind === "failed") {
     return (
       <div className="space-y-3">
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="url"
-            placeholder="https://www.tiktok.com/@user/video/..."
-            value={urlInput}
-            onChange={(e) => setUrlInput(e.target.value)}
-            required
-            className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full sm:w-auto bg-indigo-600 text-white rounded-lg px-5 py-2 font-medium hover:bg-indigo-500 disabled:opacity-50 whitespace-nowrap transition-colors"
-          >
-            {submitting ? "Submitting…" : "Transcribe"}
-          </button>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              type="url"
+              placeholder="https://www.tiktok.com/@user/video/..."
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              required
+              className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value as ModelId)}
+              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+            >
+              {GEMINI_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full sm:w-auto bg-indigo-600 text-white rounded-lg px-5 py-2 font-medium hover:bg-indigo-500 disabled:opacity-50 whitespace-nowrap transition-colors"
+            >
+              {submitting ? "Submitting…" : "Transcribe"}
+            </button>
+          </div>
         </form>
         {phase.kind === "failed" && (
           <p className="text-red-400 text-sm">{phase.error}</p>

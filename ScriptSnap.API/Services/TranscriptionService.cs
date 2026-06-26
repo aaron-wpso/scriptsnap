@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -8,7 +9,7 @@ namespace ScriptSnap.API.Services;
 
 public interface ITranscriptionService
 {
-    Task ProcessAsync(Guid transcriptionId, string url, CancellationToken ct = default);
+    Task ProcessAsync(Guid transcriptionId, string url, string model, CancellationToken ct = default);
 }
 
 public class TranscriptionService(
@@ -16,8 +17,16 @@ public class TranscriptionService(
     IHttpClientFactory httpClientFactory,
     ILogger<TranscriptionService> logger) : ITranscriptionService
 {
+    public const string DefaultModel = "gemini-2.5-flash";
 
-    public async Task ProcessAsync(Guid transcriptionId, string url, CancellationToken ct = default)
+    public static readonly IReadOnlyList<(string Id, string Label)> AvailableModels =
+    [
+        ("gemini-2.5-flash",      "Gemini 2.5 Flash — $1.00/M tokens (Recommended)"),
+        ("gemini-2.5-flash-lite", "Gemini 2.5 Flash Lite — $0.30/M tokens (Cheapest)"),
+        ("gemini-2.5-pro",        "Gemini 2.5 Pro — $1.25/M tokens (Most Accurate)"),
+    ];
+
+    public async Task ProcessAsync(Guid transcriptionId, string url, string model, CancellationToken ct = default)
     {
         var record = await db.Transcriptions.FindAsync([transcriptionId], ct);
         if (record is null) return;
@@ -25,6 +34,8 @@ public class TranscriptionService(
         try
         {
             record.Status = TranscriptionStatus.Processing;
+            record.ModelUsed = model;
+            record.ErrorMessage = null;
             await db.SaveChangesAsync(ct);
 
             var media = await GetTikTokMediaAsync(url, ct);
@@ -32,15 +43,28 @@ public class TranscriptionService(
             record.ThumbnailUrl = media.ThumbnailUrl;
             await db.SaveChangesAsync(ct);
 
-            record.Transcript = await TranscribeWithGeminiAsync(media.AudioUrl, ct);
+            record.Transcript = await TranscribeWithGeminiAsync(media.AudioUrl, model, ct);
             record.Status = TranscriptionStatus.Completed;
             record.CompletedAt = DateTime.UtcNow;
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogError(ex, "Transcription {Id} failed (HTTP {Status})", transcriptionId, ex.StatusCode);
+            record.Status = TranscriptionStatus.Failed;
+            record.ErrorMessage = ex.StatusCode switch
+            {
+                HttpStatusCode.ServiceUnavailable => $"Model '{model}' is overloaded. Please retry with a different model.",
+                HttpStatusCode.TooManyRequests    => "Rate limit reached. Please wait a moment and try again.",
+                HttpStatusCode.NotFound           => $"Model '{model}' was not found. Please select a different model.",
+                HttpStatusCode.Forbidden          => "Gemini API key is invalid or quota exceeded.",
+                _                                 => "Transcription failed. Please try again.",
+            };
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Transcription {Id} failed", transcriptionId);
             record.Status = TranscriptionStatus.Failed;
-            record.ErrorMessage = ex.Message;
+            record.ErrorMessage = "Transcription failed. Please try again.";
         }
 
         await db.SaveChangesAsync(ct);
@@ -84,7 +108,7 @@ public class TranscriptionService(
         return new TikTokMedia(audioUrl, thumbnailUrl);
     }
 
-    private async Task<string> TranscribeWithGeminiAsync(string audioUrl, CancellationToken ct)
+    private async Task<string> TranscribeWithGeminiAsync(string audioUrl, string model, CancellationToken ct)
     {
         var tikwmClient = httpClientFactory.CreateClient("tikwm");
         var audioBytes = await tikwmClient.GetByteArrayAsync(audioUrl, ct);
@@ -111,7 +135,7 @@ public class TranscriptionService(
         });
 
         var generateResponse = await geminiClient.PostAsync(
-            "/v1beta/models/gemini-3.5-flash:generateContent",
+            $"/v1beta/models/{model}:generateContent",
             new StringContent(body, Encoding.UTF8, "application/json"),
             ct);
 
