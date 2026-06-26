@@ -29,10 +29,12 @@ export default function ModelSelector({
   value,
   onChange,
   size = "default",
+  direction = "down",
 }: {
   value: ModelId;
   onChange: (id: ModelId) => void;
   size?: "default" | "sm";
+  direction?: "down" | "up";
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -66,7 +68,7 @@ export default function ModelSelector({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-1.5 z-50 min-w-[220px] bg-gray-900 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
+        <div className={`absolute right-0 z-50 min-w-[220px] bg-gray-900 border border-gray-700 rounded-xl shadow-xl overflow-hidden ${direction === "up" ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}>
           {GEMINI_MODELS.map((m) => {
             const isSelected = m.id === value;
             return (

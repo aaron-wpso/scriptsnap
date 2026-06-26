@@ -110,7 +110,7 @@ export default function TranscriptionHistory({ userId, accessToken }: { userId: 
     <div className="space-y-4">
       <ul className="space-y-2">
         {items.map((item) => (
-          <li key={item.Id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <li key={item.Id} className="bg-gray-900 border border-gray-800 rounded-xl">
             {/* Row — two-line layout on mobile */}
             <div className="flex items-center gap-3 px-4 py-3">
               {item.ThumbnailUrl ? (
