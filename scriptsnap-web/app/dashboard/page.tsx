@@ -36,7 +36,7 @@ export default async function DashboardPage() {
 
         <section>
           <h2 className="text-lg font-semibold text-white mb-4">History</h2>
-          <TranscriptionHistory userId={user.id} />
+          <TranscriptionHistory userId={user.id} accessToken={(await supabase.auth.getSession()).data.session?.access_token ?? ""} />
         </section>
       </main>
     </div>

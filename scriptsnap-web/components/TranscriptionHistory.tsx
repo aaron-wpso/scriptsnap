@@ -4,6 +4,16 @@ import { useEffect, useState, useCallback } from "react";
 import ThumbnailImage from "@/components/ThumbnailImage";
 import { createClient } from "@/lib/supabase/client";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+
+const GEMINI_MODELS = [
+  { id: "gemini-2.5-flash",      label: "Gemini 2.5 Flash — $1.00/M tokens (Recommended)" },
+  { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite — $0.30/M tokens (Cheapest)" },
+  { id: "gemini-2.5-pro",        label: "Gemini 2.5 Pro — $1.25/M tokens (Most Accurate)" },
+] as const;
+
+type ModelId = typeof GEMINI_MODELS[number]["id"];
+
 type Transcription = {
   Id: string;
   TikTokUrl: string;
@@ -12,6 +22,7 @@ type Transcription = {
   ThumbnailUrl: string | null;
   Transcript: string | null;
   ErrorMessage: string | null;
+  ModelUsed: string | null;
   CreatedAt: string;
 };
 
@@ -31,12 +42,14 @@ const dot: Record<string, string> = {
   Failed:     "bg-red-400",
 };
 
-export default function TranscriptionHistory({ userId }: { userId: string }) {
-  const [items, setItems]       = useState<Transcription[]>([]);
-  const [total, setTotal]       = useState(0);
-  const [page, setPage]         = useState(1);
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const [copied, setCopied]     = useState<string | null>(null);
+export default function TranscriptionHistory({ userId, accessToken }: { userId: string; accessToken: string }) {
+  const [items, setItems]         = useState<Transcription[]>([]);
+  const [total, setTotal]         = useState(0);
+  const [page, setPage]           = useState(1);
+  const [expanded, setExpanded]   = useState<string | null>(null);
+  const [copied, setCopied]       = useState<string | null>(null);
+  const [retrying, setRetrying]   = useState<string | null>(null);
+  const [retryModel, setRetryModel] = useState<Record<string, ModelId>>({});
   const supabase = createClient();
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -84,6 +97,17 @@ export default function TranscriptionHistory({ userId }: { userId: string }) {
     navigator.clipboard.writeText(text);
     setCopied(id);
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const handleRetry = async (item: Transcription) => {
+    const model = retryModel[item.Id] ?? "gemini-2.5-flash";
+    setRetrying(item.Id);
+    await fetch(`${API_URL}/api/transcriptions/${item.Id}/retry`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ model }),
+    });
+    setRetrying(null);
   };
 
   if (total === 0 && items.length === 0)
@@ -168,9 +192,29 @@ export default function TranscriptionHistory({ userId }: { userId: string }) {
               </div>
             )}
 
-            {item.Status === "Failed" && item.ErrorMessage && (
-              <div className="border-t border-gray-800 px-4 py-2">
-                <p className="text-xs text-red-400">{item.ErrorMessage}</p>
+            {item.Status === "Failed" && (
+              <div className="border-t border-gray-800 px-4 py-3 space-y-2">
+                {item.ErrorMessage && (
+                  <p className="text-xs text-red-400">{item.ErrorMessage}</p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={retryModel[item.Id] ?? "gemini-2.5-flash"}
+                    onChange={(e) => setRetryModel(prev => ({ ...prev, [item.Id]: e.target.value as ModelId }))}
+                    className="bg-gray-800 border border-gray-700 text-white rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {GEMINI_MODELS.map((m) => (
+                      <option key={m.id} value={m.id}>{m.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => handleRetry(item)}
+                    disabled={retrying === item.Id}
+                    className="text-xs bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-md px-3 py-1 transition-colors"
+                  >
+                    {retrying === item.Id ? "Retrying…" : "Retry"}
+                  </button>
+                </div>
               </div>
             )}
           </li>
