@@ -2,17 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import ThumbnailImage from "@/components/ThumbnailImage";
+import ModelSelector, { type ModelId } from "@/components/ModelSelector";
 import { createClient } from "@/lib/supabase/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
-
-const GEMINI_MODELS = [
-  { id: "gemini-2.5-flash",      label: "Gemini 2.5 Flash — $1.00/M tokens (Recommended)" },
-  { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite — $0.30/M tokens (Cheapest)" },
-  { id: "gemini-2.5-pro",        label: "Gemini 2.5 Pro — $1.25/M tokens (Most Accurate)" },
-] as const;
-
-type ModelId = typeof GEMINI_MODELS[number]["id"];
 
 type Phase =
   | { kind: "idle" }
@@ -144,15 +137,7 @@ export default function TranscribeForm({ accessToken }: { accessToken: string })
               required
               className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value as ModelId)}
-              className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-            >
-              {GEMINI_MODELS.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
+            <ModelSelector value={model} onChange={setModel} />
             <button
               type="submit"
               disabled={submitting}
