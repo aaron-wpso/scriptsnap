@@ -2,17 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import ThumbnailImage from "@/components/ThumbnailImage";
+import ModelSelector, { type ModelId } from "@/components/ModelSelector";
+import TranscriptionSteps from "@/components/TranscriptionSteps";
 import { createClient } from "@/lib/supabase/client";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
-
-const GEMINI_MODELS = [
-  { id: "gemini-2.5-flash",      label: "Gemini 2.5 Flash — $1.00/M tokens (Recommended)" },
-  { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite — $0.30/M tokens (Cheapest)" },
-  { id: "gemini-2.5-pro",        label: "Gemini 2.5 Pro — $1.25/M tokens (Most Accurate)" },
-] as const;
-
-type ModelId = typeof GEMINI_MODELS[number]["id"];
 
 type Transcription = {
   Id: string;
@@ -117,7 +111,7 @@ export default function TranscriptionHistory({ userId, accessToken }: { userId: 
     <div className="space-y-4">
       <ul className="space-y-2">
         {items.map((item) => (
-          <li key={item.Id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+          <li key={item.Id} className="bg-gray-900 border border-gray-800 rounded-xl">
             {/* Row — two-line layout on mobile */}
             <div className="flex items-center gap-3 px-4 py-3">
               {item.ThumbnailUrl ? (
@@ -164,6 +158,12 @@ export default function TranscriptionHistory({ userId, accessToken }: { userId: 
               )}
             </div>
 
+            {(item.Status === "Pending" || item.Status === "Processing") && (
+              <div className="border-t border-gray-800 px-4 py-4">
+                <TranscriptionSteps status={item.Status} />
+              </div>
+            )}
+
             {expanded === item.Id && (
               <div className="border-t border-gray-800 px-4 py-3 space-y-3">
                 {item.AudioUrl && (
@@ -198,15 +198,11 @@ export default function TranscriptionHistory({ userId, accessToken }: { userId: 
                   <p className="text-xs text-red-400">{item.ErrorMessage}</p>
                 )}
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
+                  <ModelSelector
                     value={retryModel[item.Id] ?? "gemini-2.5-flash"}
-                    onChange={(e) => setRetryModel(prev => ({ ...prev, [item.Id]: e.target.value as ModelId }))}
-                    className="bg-gray-800 border border-gray-700 text-white rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {GEMINI_MODELS.map((m) => (
-                      <option key={m.id} value={m.id}>{m.label}</option>
-                    ))}
-                  </select>
+                    onChange={(id) => setRetryModel(prev => ({ ...prev, [item.Id]: id }))}
+                    size="sm"
+                  />
                   <button
                     onClick={() => handleRetry(item)}
                     disabled={retrying === item.Id}
